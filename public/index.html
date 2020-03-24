@@ -38,43 +38,32 @@ $(function(){
     }
   ).addTo( map );
 
-  //. 千葉県の GeoJSON データを取得
+  //. 47 都道府県の GeoJSON データを取得
   $.ajax({
-    url: '/geojson/12',
+    url: '/geojsons',
     type: 'GET',
     success: function( result ){
-      if( result && result.status && result.geojson ){
-        var geojson = result.geojson;
-        console.log( geojson );
-
-        var feature = [{
-          type: 'Feature',
-          geometry: geojson
-        }];
-        L.geoJson( feature ).addTo( map );
-        /*
-        for( var i = 0; i < images.length; i ++ ){
-          var image = images[i];
-          var marker = L.marker( [ image.lat, image.lng ] ).addTo( map );
-          //marker.bindPopup( "<img src='//manholemap.juge.me/get?id=" + image.id + "' width='80%'/>" ).openPopup();
-
-          //. 結局、manholemap.juge.me 以下の画像はキャッシュされない。。方法はないか？
-          //. 同じドメイン内に Proxy っぽい API を作ってそこを経由させる？ -> オフライン化（キャッシュ化）には成功
-          marker.bindPopup( "<img src='./get?id=" + image.id + "' width='80%'/>" ).openPopup();
-
-          //. 東西南北の端位置
-          if( min_lat > image.lat ){ min_lat = image.lat; }
-          if( max_lat < image.lat ){ max_lat = image.lat; }
-          if( min_lng > image.lng ){ min_lng = image.lng; }
-          if( max_lng < image.lng ){ max_lng = image.lng; }
-        }
-
-        //. 全ての位置が画面内に収まるように位置とサイズを自動調節
-        var bounds = L.latLngBounds( [ min_lat, min_lng ] );
-        bounds.extend( [ min_lat, min_lng ] );
-        bounds.extend( [ max_lat, max_lng ] );
-        map.fitBounds( bounds );
-        */
+      if( result && result.status && result.jsons ){
+        var jsons = result.jsons;
+        jsons.forEach( function( geojson ){
+          var feature = [{
+            type: 'Feature',
+            geometry: geojson.geometry
+          }];
+          var option = {  //. なるべく透明
+            color: '#fff',
+            fillColor: '#fff',
+            weight: 1,
+            opacity: 0.01,
+            fillOpacity: 0.01
+          }
+          L.geoJson( feature, {
+            style: option,
+            onEachFeature: function( feature, layer ){
+              layer.bindPopup( geojson.properties.id + ' : ' + geojson.properties.nam_ja );
+            }
+          } ).addTo( map );
+        });
       }else{
       }
     },

@@ -32,6 +32,34 @@ if( cloudant ){
 app.use( express.Router() );
 app.use( express.static( __dirname + '/public' ) );
 
+//. '/geojsons' にアクセスがあった場合の処理
+app.get( '/geojsons', function( req, res ){
+  res.contentType( 'application/json; charset=utf-8' );
+
+  if( db ){
+    db.list( { include_docs: true }, function( err, result ){
+      //console.log( result );
+      if( result && result.rows ){
+        var jsons = [];
+        result.rows.forEach( function( row ){
+          jsons.push( row.doc );
+        });
+
+        res.write( JSON.stringify( { status: true, jsons: jsons } ) );
+        res.end();
+      }else{
+        res.status( 400 );
+        res.write( JSON.stringify( { status: false, error: 'no result.' } ) );
+        res.end();
+      }
+    });
+  }else{
+    res.status( 400 );
+    res.write( JSON.stringify( { status: false, error: 'db not ready.' } ) );
+    res.end();
+  }
+});
+
 //. '/geojson/:pref_id' にアクセスがあった場合の処理
 app.get( '/geojson/:pref_id', function( req, res ){
   res.contentType( 'application/json; charset=utf-8' );
@@ -46,10 +74,11 @@ app.get( '/geojson/:pref_id', function( req, res ){
           res.write( JSON.stringify( { status: false, error: err } ) );
           res.end();
         }else{
+          var name = result.properties.nam_ja;
           var type = result.geometry.type;  //. 'Polygon' or 'MultiPolygon'
           var coordinates = result.geometry.coordinates;
 
-          res.write( JSON.stringify( { status: true, geojson: { type: type, coordinates: coordinates } } ) );
+          res.write( JSON.stringify( { status: true, id: pref_id, name: name, geojson: { type: type, coordinates: coordinates } } ) );
           res.end();
 
           /*
